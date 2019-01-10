@@ -1,6 +1,6 @@
 # remirepo/fedora spec file for argon2
 #
-# Copyright (c) 2017 Remi Collet
+# Copyright (c) 2017-2019 Remi Collet
 # License: CC-BY-SA
 # http://creativecommons.org/licenses/by-sa/4.0/
 #
@@ -14,11 +14,10 @@
 %global soname       0
 
 %global upstream_version 20161029
-#global upstream_prever  RC1
 
 Name:    argon2
 Version: %{upstream_version}%{?upstream_prever:~%{upstream_prever}}
-Release: 2%{?dist}
+Release: 5%{?dist}
 Group:   Applications/System
 Summary: The password-hashing tools
 
@@ -44,7 +43,7 @@ Argon2 has three variants: Argon2i, Argon2d, and Argon2id.
 
 * Argon2d is faster and uses data-depending memory access, which makes it
   highly resistant against GPU cracking attacks and suitable for applications
-  with no threats from side-channel timing attacks (eg. cryptocurrencies). 
+  with no threats from side-channel timing attacks (eg. cryptocurrencies).
 * Argon2i instead uses data-independent memory access, which is preferred for
   password hashing and password-based key derivation, but it is slower as it
   makes more passes over the memory to protect from tradeoff attacks.
@@ -87,7 +86,8 @@ fi
 sed -e 's:lib/@HOST_MULTIARCH@:%{_lib}:;s/@UPSTREAM_VER@/%{version}/' -i %{libname}.pc
 
 # Honours default RPM build options and library path, do not use -march=native
-sed -e 's:-O3 -Wall:%{optflags}:' \
+sed -e '/^CFLAGS/s:^CFLAGS:LDFLAGS=%{build_ldflags}\nCFLAGS:' \
+    -e 's:-O3 -Wall:%{optflags}:' \
     -e '/^LIBRARY_REL/s:lib:%{_lib}:' \
     -e 's:-march=\$(OPTTARGET) :${CFLAGS} :' \
     -e 's:CFLAGS += -march=\$(OPTTARGET)::' \
@@ -118,11 +118,6 @@ chmod -x %{buildroot}%{_includedir}/%{name}.h
 %check
 make test
 
-
-%post   -n %{libname} -p /sbin/ldconfig
-%postun -n %{libname} -p /sbin/ldconfig
-
-
 %files
 %{_bindir}/%{name}
 
@@ -139,6 +134,12 @@ make test
 
 
 %changelog
+* Thu Feb 15 2018 Remi Collet <remi@remirepo.net> - 20161029-5
+- honours all build flags #1558128
+
+* Thu Feb 15 2018 Remi Collet <remi@remirepo.net> - 20161029-4
+- drop ldconfig scriptlets
+
 * Thu Nov 16 2017 Milan Broz <gmazyland@gmail.com> - 20161029-2
 - Do not use -march=native in build, use system flags (rh #1512845).
 
